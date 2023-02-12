@@ -58,6 +58,9 @@ const LibraryListChecked = () => {
           <div class="text-center text-slate-400">見つかりませんでした</div>
         </Match>
         <Match when={holders().status == "OK"}>
+          <div class="mb-3 text-center text-slate-400">
+            蔵書状態が不正確な場合があります
+          </div>
           <div class="mb-3 text-center">
             該当数: {holders().total_count}, ページ: {page() + 1} /{" "}
             {Math.ceil(holders().total_count / 20)}
