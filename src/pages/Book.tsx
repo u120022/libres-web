@@ -4,7 +4,11 @@ import { Component, createEffect, createSignal, Match, Switch } from "solid-js";
 const Book: Component = () => {
   // hook
   const params = useParams();
-  const [sParams] = useSearchParams();
+  const [sParams, setSParams] = useSearchParams();
+  const [backend, setBackend] = [
+    () => sParams.backend || "ndl",
+    (backend: string) => setSParams({ backend }),
+  ];
   const [book, setBook] = createSignal({ status: "EMPTY" });
 
   // fetch book
@@ -13,20 +17,45 @@ const Book: Component = () => {
 
     const res = await fetch(
       "https://tpu-libres-api-v2.azurewebsites.net/book/" +
-        sParams.backend +
-        "/" +
-        params.isbn
+        params.isbn +
+        "?backend=" +
+        backend()
     );
 
-    const body = await res.json();
+    if (res.status == 200) {
+      const body = await res.json();
+      setBook({ ...body, status: "OK" });
+      return;
+    }
 
-    setBook({ ...body, status: "OK" });
+    setBook({ status: "NOT_FOUND" });
   });
 
   // view
   return (
     <div class="mx-auto w-[1024px] p-5">
+      <div class="text-center">
+        <select
+          value={backend()}
+          onChange={(e) => setBackend(e.currentTarget.value)}
+          class="mb-3 rounded border border-solid border-slate-400 p-1"
+        >
+          <option value="ndl">NDL</option>
+          <option value="rakuten">Rakuten Books</option>
+          <option value="google">Google Books</option>
+        </select>
+      </div>
+
       <Switch>
+        <Match when={book().status == "LOADING"}>
+          <div class="text-center text-slate-400">準備中</div>
+        </Match>
+        <Match when={book().status == "LOADING"}>
+          <div class="text-center text-slate-400">取得中</div>
+        </Match>
+        <Match when={book().status == "NOT_FOUND"}>
+          <div class="text-center text-slate-400">見つかりませんでした</div>
+        </Match>
         <Match when={book().status == "OK"}>
           <div class="mb-10 text-4xl font-bold">{book().title}</div>
           <div class="mb-10 flex gap-3">
@@ -58,9 +87,6 @@ const Book: Component = () => {
               予約する
             </Link>
           </div>
-        </Match>
-        <Match when={book().status == "LOADING"}>
-          <div>取得中</div>
         </Match>
       </Switch>
     </div>

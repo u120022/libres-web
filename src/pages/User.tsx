@@ -98,7 +98,7 @@ const User: Component = () => {
         <div class="mb-2 font-bold">パスワード</div>
         <div class="mb-10 w-full rounded bg-slate-100 p-2">********</div>
         <div class="text-center">
-          <button class="rounded bg-slate-200 p-2" onClick={logout}>
+          <button class="w-1/4 rounded bg-slate-200 py-2" onClick={logout}>
             ログアウト
           </button>
         </div>

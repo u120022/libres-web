@@ -8,8 +8,11 @@ import {
 
 const LibraryListChecked = () => {
   // hook
-  const [sParams] = useSearchParams();
-  const [page, setPage] = createSignal(0);
+  const [sParams, setSParams] = useSearchParams();
+  const [page, setPage] = [
+    () => parseInt(sParams.page) || 0,
+    (page: number) => setSParams({ page }),
+  ];
   const [holders, setHolders] = createSignal({ status: "EMPTY" });
 
   // fetch holders
@@ -23,12 +26,16 @@ const LibraryListChecked = () => {
     });
 
     const res = await fetch(
-      "https://tpu-libres-api-v2.azurewebsites.net/holder_all_query?" + query
+      "https://tpu-libres-api-v2.azurewebsites.net/checked_holder?" + query
     );
 
-    const body = await res.json();
+    if (res.status == 200) {
+      const body = await res.json();
+      setHolders({ ...body, status: "OK" });
+      return;
+    }
 
-    setHolders({ ...body, status: "OK" });
+    setHolders({ status: "NOT_FOUND" });
   });
 
   // view
@@ -41,6 +48,15 @@ const LibraryListChecked = () => {
       />
 
       <Switch>
+        <Match when={holders().status == "EMPTY"}>
+          <div class="text-center text-slate-400">準備中</div>
+        </Match>
+        <Match when={holders().status == "LOADING"}>
+          <div class="text-center text-slate-400">取得中</div>
+        </Match>
+        <Match when={holders().status == "NOT_FOUND"}>
+          <div class="text-center text-slate-400">見つかりませんでした</div>
+        </Match>
         <Match when={holders().status == "OK"}>
           <div class="mb-3 text-center">
             該当数: {holders().total_count}, ページ: {page() + 1} /{" "}
@@ -67,17 +83,17 @@ const LibraryListChecked = () => {
             </For>
 
             <div class="text-center">
-              <button onClick={(_) => setPage((prev) => Math.max(0, prev - 1))}>
+              <button onClick={() => setPage(Math.max(0, page() - 1))}>
                 前
               </button>
               <span class="mx-3">
                 {page() + 1} / {Math.ceil(holders().total_count / 20)}
               </span>
               <button
-                onClick={(_) =>
-                  setPage((prev) =>
+                onClick={() =>
+                  setPage(
                     Math.min(
-                      prev + 1,
+                      page() + 1,
                       Math.ceil(holders().total_count / 20) - 1
                     )
                   )
@@ -87,12 +103,6 @@ const LibraryListChecked = () => {
               </button>
             </div>
           </div>
-        </Match>
-        <Match when={holders().status == "LOADING"}>
-          <div class="text-center text-slate-400">読み込み中</div>
-        </Match>
-        <Match when={holders().status == "EMPTY"}>
-          <div class="text-center text-slate-400">準備中</div>
         </Match>
       </Switch>
     </div>

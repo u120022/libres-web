@@ -76,6 +76,12 @@ const LibraryListCheckedGeocode = () => {
 
       <div class="flex flex-col gap-3">
         <Switch>
+          <Match when={holders().status == "EMPTY"}>
+            <div class="text-center text-slate-400">準備中</div>
+          </Match>
+          <Match when={holders().status == "LOADING"}>
+            <div class="text-center text-slate-400">取得中</div>
+          </Match>
           <Match when={holders().status == "OK"}>
             <For each={holders().items}>
               {(item) => (
@@ -101,12 +107,6 @@ const LibraryListCheckedGeocode = () => {
                 </Link>
               )}
             </For>
-          </Match>
-          <Match when={holders().status == "LOADING"}>
-            <div class="text-center text-slate-400">読み込み中</div>
-          </Match>
-          <Match when={holders().status == "EMPTY"}>
-            <div class="text-center text-slate-400">準備中</div>
           </Match>
         </Switch>
       </div>

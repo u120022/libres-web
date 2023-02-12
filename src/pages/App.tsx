@@ -10,11 +10,15 @@ import Register from "./Register";
 import Successful from "./Successful";
 import Reserve from "./Reserve";
 import ReservedList from "./ReservedList";
+import Reserved from "./Reserved";
 import User from "./User";
+import Header from "./Header";
 
 const App: Component = () => {
   return (
     <Router>
+      <Header />
+
       <Routes>
         <Route path={["/", "book"]} component={BookList} />
         <Route path="/book/:isbn" component={Book} />
@@ -29,6 +33,7 @@ const App: Component = () => {
         <Route path="/login" component={Login} />
         <Route path="/user" component={User} />
         <Route path="/reserved" component={ReservedList} />
+        <Route path="/reserved/:id" component={Reserved} />
         <Route path="/successful" component={Successful} />
       </Routes>
     </Router>

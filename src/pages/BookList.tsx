@@ -1,4 +1,4 @@
-import { Link } from "@solidjs/router";
+import { Link, useSearchParams } from "@solidjs/router";
 import {
   Component,
   createEffect,
@@ -10,10 +10,20 @@ import {
 
 const BookList: Component = () => {
   // hook
-  const [filter, setFilter] = createSignal("");
-  const [confirmFilter, setConfirmFilter] = createSignal("");
-  const [backend, setBackend] = createSignal("ndl");
-  const [page, setPage] = createSignal(0);
+  const [sParams, setSParams] = useSearchParams();
+  const [confirmFilter, setConfirmFilter] = [
+    () => sParams.filter || "",
+    (filter: string) => setSParams({ filter, page: 0 }),
+  ];
+  const [backend, setBackend] = [
+    () => sParams.backend || "ndl",
+    (backend: string) => setSParams({ backend, page: 0 }),
+  ];
+  const [page, setPage] = [
+    () => parseInt(sParams.page) || 0,
+    (page: number) => setSParams({ page }),
+  ];
+  const [filter, setFilter] = createSignal(confirmFilter());
   const [books, setBooks] = createSignal({ status: "EMPTY" });
 
   // fetch books
@@ -33,7 +43,7 @@ const BookList: Component = () => {
     });
 
     const res = await fetch(
-      "https://tpu-libres-api-v2.azurewebsites.net/?" + query
+      "https://tpu-libres-api-v2.azurewebsites.net/book?" + query
     );
 
     setBooks({ ...(await res.json()), status: "OK" });
@@ -57,9 +67,9 @@ const BookList: Component = () => {
           value={backend()}
           onChange={(e) => setBackend(e.currentTarget.value)}
         >
-          <option value="ndl">NDLサーチ API</option>
-          <option value="rakuten">Rakuten Books API</option>
-          <option value="google">Google Books API</option>
+          <option value="ndl">NDL</option>
+          <option value="rakuten">Rakuten Books</option>
+          <option value="google">Google Books</option>
         </select>
       </div>
       <Switch>
@@ -103,16 +113,19 @@ const BookList: Component = () => {
               )}
             </For>
             <div class="text-center">
-              <button onClick={(_) => setPage((prev) => Math.max(0, prev - 1))}>
+              <button onClick={() => setPage(Math.max(0, page() - 1))}>
                 前
               </button>
               <span class="mx-3">
                 {page() + 1} / {Math.ceil(books().total_count / 20)}
               </span>
               <button
-                onClick={(_) =>
-                  setPage((prev) =>
-                    Math.min(prev + 1, Math.ceil(books().total_count / 20) - 1)
+                onClick={() =>
+                  setPage(
+                    Math.min(
+                      page() + 1,
+                      Math.ceil(books().total_count / 20) - 1
+                    )
                   )
                 }
               >

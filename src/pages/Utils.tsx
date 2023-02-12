@@ -29,6 +29,9 @@ export const HolderStateComponent: Component<{ state: string }> = (props) => {
       <Match when={props.state == "Exists"}>
         <div class="text-green-600">蔵書あり</div>
       </Match>
+      <Match when={props.state == "Reservable"}>
+        <div class="text-green-600">予約可能</div>
+      </Match>
       <Match when={props.state == "Reserved"}>
         <div class="text-slate-400">予約済み</div>
       </Match>
@@ -36,7 +39,7 @@ export const HolderStateComponent: Component<{ state: string }> = (props) => {
         <div class="text-slate-400">貸出済み</div>
       </Match>
       <Match when={props.state == "Inplace"}>
-        <div class="text-slate-400">持ち出し負荷</div>
+        <div class="text-slate-400">持ち出し不可</div>
       </Match>
     </Switch>
   );
@@ -45,7 +48,7 @@ export const HolderStateComponent: Component<{ state: string }> = (props) => {
 export const ReservedStateComponent: Component<{ state: string }> = (props) => {
   return (
     <Switch>
-      <Match when={props.state == "staging"}>
+      <Match when={props.state == "Staging"}>
         <div class="text-slate-400">予約手続き中</div>
       </Match>
     </Switch>

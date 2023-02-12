@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@solidjs/router";
+import { Link, useNavigate, useSearchParams } from "@solidjs/router";
 import Cookies from "js-cookie";
 import {
   Component,
@@ -13,7 +13,11 @@ import { ReservedStateComponent } from "./Utils";
 const ReservedList: Component = () => {
   // hook
   const navigate = useNavigate();
-  const [page, setPage] = createSignal(0);
+  const [sParams, setSParams] = useSearchParams();
+  const [page, setPage] = [
+    () => parseInt(sParams.page) || 0,
+    (page: number) => setSParams({ page }),
+  ];
   const [holders, setBooks] = createSignal({ status: "EMPTY" });
 
   // fetch books
@@ -44,7 +48,7 @@ const ReservedList: Component = () => {
 
     const body = await res.json();
 
-    setBooks({ items: body, status: "OK" });
+    setBooks({ ...body, status: "OK" });
   });
 
   // view
@@ -58,6 +62,9 @@ const ReservedList: Component = () => {
         </Match>
         <Match when={holders().status == "LOADING"}>
           <div class="text-center text-slate-400">取得中</div>
+        </Match>
+        <Match when={holders().status == "OK" && holders().total_count == "0"}>
+          <div class="text-center text-slate-400">予約はありません</div>
         </Match>
         <Match when={holders().status == "OK"}>
           <div class="mb-3 text-center">
@@ -77,9 +84,9 @@ const ReservedList: Component = () => {
 
                   const res = await fetch(
                     "https://tpu-libres-api-v2.azurewebsites.net/book/" +
-                      backend() +
-                      "/" +
-                      item.book_id
+                      item.isbn +
+                      "?backend=" +
+                      backend()
                   );
 
                   const body = await res.json();
@@ -97,18 +104,20 @@ const ReservedList: Component = () => {
                     />
                     <div class="w-[80%]">
                       <Link
-                        href={"/book/" + item.book_id + "?backend=" + backend()}
+                        href={"/reserved/" + item.id + "?backend=" + backend()}
                       >
                         <div class="font-bold">
                           {book().title || "情報なし"}
                         </div>
                       </Link>
-                      <div>{item.library_id}</div>
-                      <div>{new Date(item.staging_at).toLocaleString()}</div>
-                      <ReservedStateComponent state={item.status} />
+                      <div>{item.library_name}</div>
+                      <div>
+                        {new Date(item.staging_at + "Z").toLocaleString()}
+                      </div>
+                      <ReservedStateComponent state={item.state} />
 
                       <select
-                        class="rounded border border-solid border-slate-400 p-1"
+                        class="mt-2 rounded border border-solid border-slate-400 p-1"
                         value={backend()}
                         onChange={(e) => setBackend(e.currentTarget.value)}
                       >
@@ -122,17 +131,17 @@ const ReservedList: Component = () => {
               }}
             </For>
             <div class="text-center">
-              <button onClick={(_) => setPage((prev) => Math.max(0, prev - 1))}>
+              <button onClick={() => setPage(Math.max(0, page() - 1))}>
                 前
               </button>
               <span class="mx-3">
                 {page() + 1} / {Math.ceil(holders().total_count / 20)}
               </span>
               <button
-                onClick={(_) =>
-                  setPage((prev) =>
+                onClick={() =>
+                  setPage(
                     Math.min(
-                      prev + 1,
+                      page() + 1,
                       Math.ceil(holders().total_count / 20) - 1
                     )
                   )

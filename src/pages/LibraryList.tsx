@@ -11,12 +11,21 @@ import { createReserveLink, SwitcherComponent } from "./Utils";
 
 const LibraryList: Component = () => {
   // hook
-  const [sParams] = useSearchParams();
-  const [prefecture, setPrefecture] = createSignal("");
-  const [confirmPrefecture, setConfirmPrefecture] = createSignal("");
-  const [city, setCity] = createSignal("");
-  const [confirmCity, setConfirmCity] = createSignal("");
-  const [page, setPage] = createSignal(0);
+  const [sParams, setSParams] = useSearchParams();
+  const [confirmPrefecture, setConfirmPrefecture] = [
+    () => sParams.prefecture,
+    (prefecture: string) => setSParams({ prefecture, page: 0 }),
+  ];
+  const [confirmCity, setConfirmCity] = [
+    () => sParams.city,
+    (city: string) => setSParams({ city, page: 0 }),
+  ];
+  const [page, setPage] = [
+    () => parseInt(sParams.page) || 0,
+    (page: number) => setSParams({ page }),
+  ];
+  const [prefecture, setPrefecture] = createSignal(confirmPrefecture() || "");
+  const [city, setCity] = createSignal(confirmCity() || "");
   const [libraryies, setLibraries] = createSignal({ status: "EMPTY" });
 
   // fetch libraries
@@ -73,6 +82,14 @@ const LibraryList: Component = () => {
       </div>
 
       <Switch>
+        <Match when={libraryies().status == "EMPTY"}>
+          <div class="text-center text-slate-400">
+            都道府県とを市町村区を入力してください
+          </div>
+        </Match>
+        <Match when={libraryies().status == "LOADING"}>
+          <div class="text-center text-slate-400">取得中</div>
+        </Match>
         <Match when={libraryies().status == "OK"}>
           <div class="mb-3 text-center">
             該当数: {libraryies().total_count}, ページ: {page() + 1} /{" "}
@@ -97,17 +114,17 @@ const LibraryList: Component = () => {
             </For>
 
             <div class="text-center">
-              <button onClick={(_) => setPage((prev) => Math.max(0, prev - 1))}>
+              <button onClick={() => setPage(Math.max(0, page() - 1))}>
                 前
               </button>
               <span class="mx-3">
                 {page() + 1} / {Math.ceil(libraryies().total_count / 20)}
               </span>
               <button
-                onClick={(_) =>
-                  setPage((prev) =>
+                onClick={() =>
+                  setPage(
                     Math.min(
-                      prev + 1,
+                      page() + 1,
                       Math.ceil(libraryies().total_count / 20) - 1
                     )
                   )
@@ -116,14 +133,6 @@ const LibraryList: Component = () => {
                 次
               </button>
             </div>
-          </div>
-        </Match>
-        <Match when={libraryies().status == "LOADING"}>
-          <div class="text-center text-slate-400">読み込み中</div>
-        </Match>
-        <Match when={libraryies().status == "EMPTY"}>
-          <div class="text-center text-slate-400">
-            都道府県とを市町村区を入力してください
           </div>
         </Match>
       </Switch>
